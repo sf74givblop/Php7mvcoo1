@@ -90,17 +90,19 @@ class Database{
     } 
     
     public function disconnect(){
-                echo '<pre>'.'1 - function disconnect starts '.'</pre>';
-                //$curConnState = 0;
-                echo '<pre>'.'2 - Current connState(should be one): '.$this->getConnState().'</pre>';
-                $ccc=$this->getConn();
-                if(mysqli_close($ccc)){
-                    //We reset everything
-                    $this->_setConnState(0);
-                    $this->_setConn(NULL);
-                    echo '<div id="deconn_MessageGreen" style="color:green;font-weight:bold;">Now we are correctly disconnected</div>';
-                } 
-
+        echo '<pre>'.'1 - function disconnect starts '.'</pre>';
+        //$curConnState = 0;
+        echo '<pre>'.'2 - Current connState(should be one): '.$this->getConnState().'</pre>';
+        $ccc=$this->getConn();
+        if(mysqli_close($ccc)){
+            //We reset everything
+            $this->_setConnState(0);
+            $this->_setConn(NULL);
+            $curState=0;
+            echo '<div id="deconn_MessageGreen" style="color:green;font-weight:bold;">Now we are correctly disconnected</div>';
+        } 
+        echo 'After we disconnected, $this->getConnState() is: '.$this->getConnState().'<br>';
+        echo 'After we disconnected, $curState is: '.$curState.'<br>';
     }
     
 
