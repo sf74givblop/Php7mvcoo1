@@ -3,18 +3,24 @@
     define('_U_','root'); 
     define('_P_',''); 
     define('_D_','cdcol');
+    
+    echo "<!DOCTYPE html>
+            <html>
+                <head>
+                    <style>
+                        table#taMain {border: 5px solid red;border-collapse: collapse;}
+                        table#taMain > thead {color:white; font-weight:bold}
+                        table#taMain > thead > tr {background-color:green;}
+                        table#taMain > thead > tr > td {padding:4px; width:100px!important; max-width:100px!important; min-width:100px!important}
+                        table#taMain > tbody {color:blue;}
+                        table#taMain > tbody > tr > td {border: 0.5px solid orange;}
+                        table#taMain > tfoot {color:red;}
+                    </style>
+                </head>
+        ";
+
 
 /* Object Oriented CRUD Operations */
-
-class Res{
-    var $result;   //that var is only used in that class 
-    public function _setResult($new_result){
-        $this->result=$new_result;
-    }
-    public function getResult(){
-        return $this->result;    
-    }   
-}
 
 class Dbname{
     var $dbName;    //that var is only used in that class
@@ -34,6 +40,16 @@ class NumRes{
     public function getNumResults(){
         return $this->numResults;    
     }     
+}
+
+class Res{
+    var $result;   //that var is only used in that class 
+    public function _setResult($new_result){
+        $this->result=$new_result;
+    }
+    public function getResult(){
+        return $this->result;    
+    }   
 }
 
 
@@ -107,10 +123,11 @@ class Database{
     
 
     public function tableExists($table){
-        echo "s3 - db: ".D."~tableExits starts<br>";
-        echo "s4 - tableExists starts<br>";
-        $tablesInDb = mysqli_query(Database::conHandle,'SHOW TABLES FROM '.D.' LIKE "'.$table.'"');
+        echo "s3 - db: "._D_."~tableExits starts<br>";
+        $ccc=$this->getConn();  /* using the handle */
+        $tablesInDb = mysqli_query($ccc,'SHOW TABLES FROM '._D_.' LIKE "'.$table.'"');
         if($tablesInDb){
+            echo "s4 - mysqli_num_rows=: ".mysqli_num_rows($tablesInDb) ."<br>";
             if(mysqli_num_rows($tablesInDb)==1){
                 return true; 
             }else{ 
@@ -119,7 +136,7 @@ class Database{
         }
     }
     
-    
+    private $result = array();
     public function select($table, $rows = '*', $where = null, $order = null){
 echo "s1 - select Starts<br>";
         //echo 'Table name is: '.$table.', Number of rows:'.$rows.'<br>';
@@ -132,27 +149,59 @@ echo "s1 - select Starts<br>";
             $q .= ' ORDER BY '.$order;
         }
 echo "s2 - ".$q."<br>";
-        if(self::tableExists($table)){ 
-            
-            $query = mysqli_query(parent::conn,$q);
+        if(self::tableExists($table)){           /* Note self:: here */
+echo "continuing after verifying the table with query q: <br>".$q."<br>";            
+            $ccc=$this->getConn();
+            $query = mysqli_query($ccc,$q);
             if($query){
-                $this->numResults = mysqli_num_rows($query);
-                for($i = 0; $i < $this->numResults; $i++){
+                
+                //Calling external class
+                $curNumRes=new NumRes;
+                $curNumRes->_setNumResults(mysqli_num_rows($query));
+                $nR=$curNumRes->getNumResults();
+                echo "curNumRes->getNumResults(): ".$nR."<br>";
+                $curRes=new Res;
+                
+                //the table
+                echo "<table id='taMain'>";
+                for($i = 0; $i < $nR; $i++){
                     $r = mysqli_fetch_array($query);
-                    $key = array_keys($r); 
-                    for($x = 0; $x < count($key); $x++){
+                    $key = array_keys($r);
+                    $numKey = count($key);
+                    //we just want one header row
+                    if($i==0){
+                        //the headers
+                        echo "<thead><tr>";
+                        for($h = 0; $h < $numKey; $h++){
+                            echo "<td>".$key[$h]."</td>";  
+                        }
+                        echo "</tr></thead><tbody>";
+                    }
+                    for($x = 0; $x < $numKey; $x++){
                         // Sanitizes keys so only alphavalues are allowed
                         if(!is_int($key[$x])){
+                            //echo "Column header----------->".$key[$x]."<br>";
                             if(mysqli_num_rows($query) > 1){
                                 $this->result[$i][$key[$x]] = $r[$key[$x]];
+                                $curRes->_setResult($this->result[$i][$key[$x]]);
                             }else if(mysqli_num_rows($query) < 1){
-                                $this->result = null; 
+                                $this->result = NULL;
+                                $curRes->_setResult($this->result);
                             }else{
                                 $this->result[$key[$x]] = $r[$key[$x]];
+                                $curRes->_setResult($this->result[$key[$x]]);
+                            }
+                            if($x==0){
+                                echo "<tr>";
+                            }
+                                    echo "<td colspan='2'>".$curRes->getResult()."</td>";
+                            if($x==$numKey-1){    //7 because we have 8 cells in our rows
+                                echo "</tr>";
                             }
                         }
                     }
-                }            
+                }
+                echo "</tbody></table>";
                 return true; 
             }else{
                 return false; 
@@ -184,7 +233,12 @@ echo "s2 - ".$q."<br>";
 //include('crud.php');
 $db = new Database();
 $db->connect();
-//$db->select($tableName);
+$tableName='cds';
+$db->select($tableName);
+//$db->select($tableName,'*', 'SINGER LIKE \'Gene Vincent\'');
+//$R=new Res;
+//$res = $R->getResult();
+//echo $res;
 $db->disconnect();
-//$res = $db->getResult();
-//print_r($res);
+
+echo "</html>";
