@@ -33,9 +33,16 @@
                 ";
 
                 $_CRUDOP='';
+                
+                //SELECT
                 $_FIELDS='';
                 $_WHERE='';
                 $_ORDER='';
+                
+                //INSERT
+                $_VALUES='';
+                
+                
                 if(isset($_GET["CRUDOP"])){
                     $_CRUDOP=$_GET["CRUDOP"];
                     echo "<div id='curQueryStringA'>CRUD: ".$_CRUDOP."<div>";
@@ -43,6 +50,8 @@
                     $_CRUDOP='SELECT';
                     echo "<div id='curQueryStringA'>CRUD: ".$_CRUDOP."<div>";                    
                 }
+                
+                //SELECT
                 if(isset($_GET["FI"])){
                     $_FIELDS=$_GET["FI"];
                     if(($_FIELDS!='')&&($_FIELDS!=NULL)){
@@ -80,6 +89,20 @@
                     echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";                    
                 }
                 
+                //INSERT
+                if(isset($_GET["VALS"])){
+                    $_VALUES=$_GET["VALS"];
+                    if(($_VALUES!='')&&($_VALUES!=NULL)){
+                        echo "<div id='curQueryStringE'>ORDER: ".$_VALUES."<div>";
+                    }else{
+                        $_VALUES='';
+                        echo "<div id='curQueryStringE'>ORDER: ".$_VALUES."<div>";
+                    }
+                }else{
+                    $_VALUES='';
+                    echo "<div id='curQueryStringE'>ORDER: ".$_VALUES."<div>";                    
+                }
+                
                 echo "
                     <div id=\"container_upper\">
                         <h2>Object Oriented CRUD operations</h2>
@@ -108,7 +131,9 @@
                         TO ADD AN ORDER BY: Add -> ?CRUDOP=SELECT&FI=MYCOL&WH=SINGER LIKE 'Gene Vincent'&ORD=SINGER DESC
                         <br> 
                         OR ?CRUDOP=SELECT&FI=SINGER,YEAR&WH=SINGER%20LIKE%20%27Gene%20Vincent%27&ORD=SINGER%20DESC
-                        <br />                        
+                        <br /><br />
+                        TO INSERT  Add -> ?CRUDOP=INSERT&VALS=V1~V2~V3~V4 to the QueryString (Auto-increment column should show NULL
+                        <br /><br />                        
                         In other circumstances, the code could use a form, you would submit it and grab the submitted values.
                         <br />
                         That NON-RESPONSIVE page is juste here for demo purposes.
@@ -234,10 +259,10 @@ class Database{
     }
     
     private $result = array();
-    public function select($table, $rows = '*', $where = null, $order = null){
+    public function select($table, $cols = '*', $where = null, $order = null){
 echo "s1 - select Starts<br>";
-        //echo 'Table name is: '.$table.', Number of rows:'.$rows.'<br>';
-        $q = 'SELECT '.$rows.' FROM '.$table;
+        //echo 'Table name is: '.$table.', Number of rows:'.$cols.'<br>';
+        $q = 'SELECT '.$cols.' FROM '.$table;
         
         if($where != null){
             $q .= ' WHERE '.$where;
@@ -309,8 +334,78 @@ echo "continuing after verifying the table with query q: <br>".$q."<br>";
 
     }    
     
-    public function insert()        {   }
-    public function delete()        {   }
+    private $curValsString;
+    private $curValsArray = array();
+    public function insert($table,$cols = null,$values){
+        
+        /*ID column, the last one is auto-increment so we leave it alone */
+        
+        echo "i1 - insert Starts<br>";
+        if(self::tableExists($table)){
+            $insert = 'INSERT INTO '.$table;
+            echo "i2 - ".$insert.'<br />';
+            if($cols != null){
+                echo "i3 - cols: ".$cols.'<br />';
+                $insert .= ' ('.$cols.')';
+                echo "i4 - ".$insert.'<br />';
+            }else{
+                echo '<div id="conn_MessageRedInsert1" style="color:red;font-weight:bold;">ERROR 003. insert function. Columns are not defined.</div>';
+                die(); 
+            }
+            
+            if($values==NULL||$values==''){ 
+                echo '<div id="conn_MessageRedInsert2" style="color:red;font-weight:bold;">ERROR 004. insert function. Values are not defined.</div>';
+                die();                
+            }
+
+            echo "i5 - values: ".$values.'<br />';
+            $curValsArray=explode('~',$values);
+            echo "i6 - count values: ".count($curValsArray).'<br />';
+            for($i = 0; $i < count($curValsArray); $i++){
+                echo "i7 - curValsArray[i]: ".$curValsArray[$i].'<br />';
+                //checking the datatype, here we are looking for 2 strings values
+                //and one int(11) for the YEAR field
+                if(($i==0)||($i==1)){
+                    if(is_string($curValsArray[$i])){
+                        $curValsArray[$i] = '\''.$curValsArray[$i].'\'';
+                        echo 'insert DT string validation OK<br />';
+                    }else{
+                        echo '<div id="conn_MessageRedInsertDTverif1" style="color:red;font-weight:bold;">ERROR . insert function. One of the 2 first values is not a string.</div>';
+                        die();                  
+                    }
+                }
+                if(($i==2)){
+                    if(is_numeric($curValsArray[$i])){
+                        $curValsArray[$i] = '\''.$curValsArray[$i].'\'';
+                        echo 'insert DT number validation OK<br />';
+                    }else{
+                        echo '<div id="conn_MessageRedInsertDTverif2" style="color:red;font-weight:bold;">ERROR . insert function. The third value is not a number.</div>';                    
+                        die();                        
+                    }
+                }
+            }
+            $curValsString = implode(',',$curValsArray);
+            $insert .= ' VALUES ('.$curValsString.')';
+            echo 'i8 - '.$insert.'<br />';
+            $cci=$this->getConn();
+            $ins = mysqli_query($cci,$insert);       //<<<<<<<<<<<<<<<<<<<<<<<<<<<
+            if($ins){
+                echo '<div id="conn_MessageGreen1" style="color:green;font-weight:bold;">Data correctly inserted</div>';
+                return true; 
+            }else{
+                echo '<div id="conn_MessageRedInsert3" style="color:red;font-weight:bold;">ERROR 005. insert function. FAILURE, NOT INSERTED.</div>';
+                die();  
+                return false; 
+            }
+        }
+    }    
+
+    public function delete(){   
+        
+        
+        
+    }
+    
     public function update()    {   }
 
 
@@ -335,7 +430,8 @@ echo '<br />>>>'.$_CRUDOP.'<<<<br />';
 if($_CRUDOP=='SELECT'){
     $db->select($tableName,$_FIELDS,$_WHERE,$_ORDER);
 }elseif($_CRUDOP=='INSERT'){
-    
+    $_FIELDS="`TITLE`,`SINGER`,`YEAR`,`ID`";    /*Note the backticks ` */
+    $db->insert($tableName,$_FIELDS,$_VALUES);
 }elseif($_CRUDOP=='UPDATE'){
     
 }elseif($_CRUDOP=='DELETE'){

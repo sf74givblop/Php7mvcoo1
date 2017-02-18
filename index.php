@@ -13,7 +13,6 @@ and open the template in the editor.
         <meta content="no-cache,no-store,must-revalidate,max-age=-1" http-equiv="Cache-Control">
         <meta content="no-cache,no-store" http-equiv="Pragma">
         <meta content="-1" http-equiv="Expires">
-        <meta content="Serge M Frezier" name="Author">
         <meta content="INDEX,FOLLOW" name="robots">
         <meta content="" name="keywords">
         <meta content="" name="description">
