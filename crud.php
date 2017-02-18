@@ -42,6 +42,9 @@
                 //INSERT
                 $_VALUES='';
                 
+                //DELETE
+                $_WHERE_DEL=NULL;
+                
                 
                 if(isset($_GET["CRUDOP"])){
                     $_CRUDOP=$_GET["CRUDOP"];
@@ -52,56 +55,78 @@
                 }
                 
                 //SELECT
-                if(isset($_GET["FI"])){
-                    $_FIELDS=$_GET["FI"];
-                    if(($_FIELDS!='')&&($_FIELDS!=NULL)){
-                        echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";
+                if($_CRUDOP=='SELECT'){
+                    if(isset($_GET["FI"])){
+                        $_FIELDS=$_GET["FI"];
+                        if(($_FIELDS!='')&&($_FIELDS!=NULL)){
+                            echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";
+                        }else{
+                            $_FIELDS='*';
+                            echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";                    
+                        }
                     }else{
                         $_FIELDS='*';
                         echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";                    
                     }
-                }else{
-                    $_FIELDS='*';
-                    echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";                    
-                }
-                if(isset($_GET["WH"])){
-                    $_WHERE=$_GET["WH"];
-                    if(($_WHERE!='')&&($_WHERE!=NULL)){
-                        echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";
+                    if(isset($_GET["WH"])){
+                        $_WHERE=$_GET["WH"];
+                        if(($_WHERE!='')&&($_WHERE!=NULL)){
+                            echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";
+                        }else{
+                            $_WHERE='';
+                            echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";
+                        }
                     }else{
                         $_WHERE='';
-                        echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";
+                        echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";                    
                     }
-                }else{
-                    $_WHERE='';
-                    echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";                    
-                }
-                if(isset($_GET["ORD"])){
-                    $_ORDER=$_GET["ORD"];
-                    if(($_ORDER!='')&&($_ORDER!=NULL)){
-                        echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";
+                    if(isset($_GET["ORD"])){
+                        $_ORDER=$_GET["ORD"];
+                        if(($_ORDER!='')&&($_ORDER!=NULL)){
+                            echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";
+                        }else{
+                            $_ORDER='';
+                            echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";
+                        }
                     }else{
                         $_ORDER='';
-                        echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";
+                        echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";                    
                     }
-                }else{
-                    $_ORDER='';
-                    echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";                    
                 }
                 
                 //INSERT
-                if(isset($_GET["VALS"])){
-                    $_VALUES=$_GET["VALS"];
-                    if(($_VALUES!='')&&($_VALUES!=NULL)){
-                        echo "<div id='curQueryStringE'>ORDER: ".$_VALUES."<div>";
+                if($_CRUDOP=='INSERT'){
+                    if(isset($_GET["VALS"])){
+                        $_VALUES=$_GET["VALS"];
+                        if(($_VALUES!='')&&($_VALUES!=NULL)){
+                            echo "<div id='curQueryStringE'>VALUES: ".$_VALUES."<div>";
+                        }else{
+                            $_VALUES='';
+                            echo "<div id='curQueryStringE'>VALUES: ".$_VALUES."<div>";
+                        }
                     }else{
                         $_VALUES='';
-                        echo "<div id='curQueryStringE'>ORDER: ".$_VALUES."<div>";
+                        echo "<div id='curQueryStringE'>VALUES: ".$_VALUES."<div>";                    
                     }
-                }else{
-                    $_VALUES='';
-                    echo "<div id='curQueryStringE'>ORDER: ".$_VALUES."<div>";                    
                 }
+                
+                //DELETE
+                // Caution if no WHERE we delete the whole table
+                if($_CRUDOP=='DELETE'){
+                    if(isset($_GET["WHDEL"])){
+                        $_WHERE_DEL=$_GET["WHDEL"];
+                        if(($_WHERE_DEL!='')&&($_WHERE_DEL!=NULL)){
+                            echo "<div id='curQueryStringF'>WHERE DELETE: ".$_WHERE_DEL."<div>";
+                        }else{
+                            echo '<div id="conn_MessageRedDELETE" style="color:red;font-weight:bold;">VOLONTARY ERROR A. I BLOCK SO THAT WE DO NOT DELTE THE WHOLE TABLE.</div>';
+                            die();
+                        }
+                    }else{
+                        echo '<div id="conn_MessageRedDELETE" style="color:red;font-weight:bold;">VOLONTARY ERROR B. I BLOCK SO THAT WE DO NOT DELTE THE WHOLE TABLE.</div>';
+                        die();                   
+                    }
+                }
+                
                 
                 echo "
                     <div id=\"container_upper\">
@@ -132,8 +157,12 @@
                         <br> 
                         OR ?CRUDOP=SELECT&FI=SINGER,YEAR&WH=SINGER%20LIKE%20%27Gene%20Vincent%27&ORD=SINGER%20DESC
                         <br /><br />
-                        TO INSERT  Add -> ?CRUDOP=INSERT&VALS=V1~V2~V3~V4 to the QueryString (Auto-increment column should show NULL
-                        <br /><br />                        
+                        TO INSERT Add -> ?CRUDOP=INSERT&VALS=V1~V2~V3~V4 to the QueryString (Auto-increment column should show NULL
+                        <br /><br />
+                        Caution if no WHERE we delete the whole table
+                        <br />
+                        TO DELETE Add -> ?CRUDOP=DELETE&WHDEL=ID LIKE 9
+                        <br /><br />
                         In other circumstances, the code could use a form, you would submit it and grab the submitted values.
                         <br />
                         That NON-RESPONSIVE page is juste here for demo purposes.
@@ -388,9 +417,9 @@ echo "continuing after verifying the table with query q: <br>".$q."<br>";
             $insert .= ' VALUES ('.$curValsString.')';
             echo 'i8 - '.$insert.'<br />';
             $cci=$this->getConn();
-            $ins = mysqli_query($cci,$insert);       //<<<<<<<<<<<<<<<<<<<<<<<<<<<
+            $ins = mysqli_query($cci,$insert);
             if($ins){
-                echo '<div id="conn_MessageGreen1" style="color:green;font-weight:bold;">Data correctly inserted</div>';
+                echo '<div id="conn_MessageGreenInsert1" style="color:green;font-weight:bold;">Data correctly inserted</div>';
                 return true; 
             }else{
                 echo '<div id="conn_MessageRedInsert3" style="color:red;font-weight:bold;">ERROR 005. insert function. FAILURE, NOT INSERTED.</div>';
@@ -400,11 +429,42 @@ echo "continuing after verifying the table with query q: <br>".$q."<br>";
         }
     }    
 
-    public function delete(){   
+    public function delete($table,$where = null){   
+        /*
+         * This function simply deletes either a table or a row from our database. 
+         * As such we must pass the table name and an optional $_WHERE_DEL clause. 
+         * The $_WHERE_DEL clause will let us know if we need to delete a row(STRING) or the whole table(NULL). 
+         * If the where clause is not NULL, that means that entries that match will be deleted. 
+         */
         
-        
-        
+        if(self::tableExists($table)){
+            if($where == null){
+                $delete = 'DELETE '.$table;
+                //voluntary error as we do not want to delete our table
+                echo '<div id="conn_MessageRedDELETEdel" style="color:red;font-weight:bold;">VOLONTARY ERROR. I BLOCK SO THAT WE DO NOT DELTE THE WHOLE TABLE.</div>';
+                die();
+            }else{
+                $delete = 'DELETE FROM '.$table.' WHERE '.$where; 
+            }
+            $ccd=$this->getConn();
+            $del = mysqli_query($ccd,$delete);
+ 
+            if($del){
+                echo '<div id="conn_MessageGreenDel" style="color:green;font-weight:bold;">1 row correctly deleted</div>';
+                return true; 
+            }else{
+               echo '<div id="conn_MessageRedDelete1" style="color:red;font-weight:bold;">ERROR 006. delete function. FAILURE, ROW NOT DELETED</div>';
+               die();  
+               return false; 
+            }
+        }else{
+            echo '<div id="conn_MessageRedDelete2" style="color:red;font-weight:bold;">ERROR 007. delete function. FAILURE, NON-EXISTING TABLE</div>';
+            die();
+            return false; 
+        }
     }
+        
+    
     
     public function update()    {   }
 
@@ -432,9 +492,10 @@ if($_CRUDOP=='SELECT'){
 }elseif($_CRUDOP=='INSERT'){
     $_FIELDS="`TITLE`,`SINGER`,`YEAR`,`ID`";    /*Note the backticks ` */
     $db->insert($tableName,$_FIELDS,$_VALUES);
-}elseif($_CRUDOP=='UPDATE'){
-    
 }elseif($_CRUDOP=='DELETE'){
+    $db->delete($tableName,$_WHERE_DEL);
+    // To delete a whole table: $db->delete($tableName,NULL); I blocked it just in case in the code above
+}elseif($_CRUDOP=='UPDATE'){
     
 }else{
     echo '<div id="conn_MessageRedCRUDOP" style="color:red;font-weight:bold;">ERROR 002. CRUDOP not recognized.</div>';
