@@ -3,10 +3,22 @@
     define('_U_','root'); 
     define('_P_',''); 
     define('_D_','cdcol');
-    
+       
     echo "<!DOCTYPE html>
             <html>
                 <head>
+                    <meta charset=\"UTF-8\">        
+                    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0\"/>
+                    <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\">
+                    <meta content=\"IE=edge,chrome=1\" http-equiv=\"X-UA-Compatible\">
+                    <meta content=\"no-cache,no-store,must-revalidate,max-age=-1\" http-equiv=\"Cache-Control\">
+                    <meta content=\"no-cache,no-store\" http-equiv=\"Pragma\">
+                    <meta content=\"-1\" http-equiv=\"Expires\">
+                    <meta content=\"Serge M Frezier\" name=\"author\">
+                    <meta content=\"INDEX,FOLLOW\" name=\"robots\">
+                    <meta content=\"\" name=\"keywords\">
+                    <meta content=\"\" name=\"description\">
+                    <!--<meta name=\"mobile-web-app-capable\" content=\"yes\">-->
                     <style>
                         table#taMain {border: 5px solid red;border-collapse: collapse;}
                         table#taMain > thead {color:white; font-weight:bold}
@@ -17,6 +29,91 @@
                         table#taMain > tfoot {color:red;}
                     </style>
                 </head>
+                <body>
+                ";
+
+                $_CRUDOP='';
+                $_FIELDS='';
+                $_WHERE='';
+                $_ORDER='';
+                if(isset($_GET["CRUDOP"])){
+                    $_CRUDOP=$_GET["CRUDOP"];
+                    echo "<div id='curQueryStringA'>CRUD: ".$_CRUDOP."<div>";
+                }else{
+                    $_CRUDOP='SELECT';
+                    echo "<div id='curQueryStringA'>CRUD: ".$_CRUDOP."<div>";                    
+                }
+                if(isset($_GET["FI"])){
+                    $_FIELDS=$_GET["FI"];
+                    if(($_FIELDS!='')&&($_FIELDS!=NULL)){
+                        echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";
+                    }else{
+                        $_FIELDS='*';
+                        echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";                    
+                    }
+                }else{
+                    $_FIELDS='*';
+                    echo "<div id='curQueryStringB'>FIELDS: ".$_FIELDS."<div>";                    
+                }
+                if(isset($_GET["WH"])){
+                    $_WHERE=$_GET["WH"];
+                    if(($_WHERE!='')&&($_WHERE!=NULL)){
+                        echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";
+                    }else{
+                        $_WHERE='';
+                        echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";
+                    }
+                }else{
+                    $_WHERE='';
+                    echo "<div id='curQueryStringC'>WHERE: ".$_WHERE."<div>";                    
+                }
+                if(isset($_GET["ORD"])){
+                    $_ORDER=$_GET["ORD"];
+                    if(($_ORDER!='')&&($_ORDER!=NULL)){
+                        echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";
+                    }else{
+                        $_ORDER='';
+                        echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";
+                    }
+                }else{
+                    $_ORDER='';
+                    echo "<div id='curQueryStringD'>ORDER: ".$_ORDER."<div>";                    
+                }
+                
+                echo "
+                    <div id=\"container_upper\">
+                        <h2>Object Oriented CRUD operations</h2>
+                        <h2>Toward an OO CRUD REST API. Test page 1</h2>
+                        <br />
+                        Please note that for demo purposes I integrated the PHP classes and the markup code on the same page.
+                        <br />
+                        It is probably better to separate them.
+                        <br />
+                        One can choose the CRUD operations and other optional settings by using the QueryString.
+                        <br />                        
+                        See below:
+                        <br /><br />                        
+                        SELECT STATEMENT (in fact CRUDOP is always SELECT for the select() function:
+                        <br />                        
+                        TO SELECT: Add -> ?CRUDOP=SELECT to the QueryString
+                        <br />                        
+                        TO SELECT ALL ROWS FROM TABLE: Add -> ?CRUDOP=SELECT to the QueryString
+                        <br />                        
+                        TO SELECT SOME ROWS FROM TABLE: Add -> ?CRUDOP=SELECT&FI=SINGER,YEAR to the QueryString
+                        <br />                        
+                        TO SELECT ALL ROWS FROM TABLE WHERE: Add -> ?CRUDOP=SELECT&FI=MYCOL&WH=SINGER LIKE \'Gene Vincent\' to the QueryString
+                        <br> 
+                        OR ?CRUDOP=SELECT&FI=SINGER,YEAR&WH=SINGER%20LIKE%20%27Gene%20Vincent%27                        
+                        <br />                        
+                        TO ADD AN ORDER BY: Add -> ?CRUDOP=SELECT&FI=MYCOL&WH=SINGER LIKE 'Gene Vincent'&ORD=SINGER DESC
+                        <br> 
+                        OR ?CRUDOP=SELECT&FI=SINGER,YEAR&WH=SINGER%20LIKE%20%27Gene%20Vincent%27&ORD=SINGER%20DESC
+                        <br />                        
+                        In other circumstances, the code could use a form, you would submit it and grab the submitted values.
+                        <br />
+                        That NON-RESPONSIVE page is juste here for demo purposes.
+                    </div>
+                    <br />
         ";
 
 
@@ -234,11 +331,23 @@ echo "continuing after verifying the table with query q: <br>".$q."<br>";
 $db = new Database();
 $db->connect();
 $tableName='cds';
-$db->select($tableName);
-//$db->select($tableName,'*', 'SINGER LIKE \'Gene Vincent\'');
+echo '<br />>>>'.$_CRUDOP.'<<<<br />';
+if($_CRUDOP=='SELECT'){
+    $db->select($tableName,$_FIELDS,$_WHERE,$_ORDER);
+}elseif($_CRUDOP=='INSERT'){
+    
+}elseif($_CRUDOP=='UPDATE'){
+    
+}elseif($_CRUDOP=='DELETE'){
+    
+}else{
+    echo '<div id="conn_MessageRedCRUDOP" style="color:red;font-weight:bold;">ERROR 002. CRUDOP not recognized.</div>';
+    die();
+}
+
 //$R=new Res;
 //$res = $R->getResult();
 //echo $res;
 $db->disconnect();
 
-echo "</html>";
+echo "</body></html>";
